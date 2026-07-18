@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>오늘의 리듬 — 컨디션 체크</title>
+
+<!-- ── 링크 공유 미리보기(OG) 설정 ─────────────────────────
+     배포 후 아래 두 곳의 주소를 실제 배포 주소로 바꿔주세요.
+     og:image 는 저장소에 og-image.png(권장 1200x630)를 올린 뒤
+     전체 주소로 적어야 X·메신저에서 이미지가 보여요. -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="오늘의 리듬 · Today's Rhythm" />
+<meta property="og:description" content="질문 10개, 1분 컨디션 체크. 활동·휴식·수면 중 오늘의 길을 찾아보세요. A 1-minute self check for body & mind. 한국어/English/日本語" />
+<meta property="og:url" content="https://USERNAME.github.io/today-rhythm/" />
+<meta property="og:image" content="https://USERNAME.github.io/today-rhythm/og-image.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="오늘의 리듬 · Today's Rhythm" />
+<meta name="twitter:description" content="질문 10개, 1분 컨디션 체크. 활동·휴식·수면 중 오늘의 길을 찾아보세요." />
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+      "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    --font-serif: ui-serif, "Noto Serif KR", "Apple Myungjo", "Nanum Myeongjo", Batang,
+      "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
+  }
+  body {
+    min-height: 100vh; background: #FBFAF7; color: #33333B;
+    font-family: var(--font-body);
+    display: flex; justify-content: center;
+  }
+  .frame { width: 100%; max-width: 430px; padding: 16px 22px 44px; }
+  .lang-row { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 14px; }
+  .lang-btn {
+    border: 1px solid #E9E6DE; background: #fff; color: #8B887F;
+    border-radius: 999px; padding: 6px 11px; font-size: 12px; font-family: inherit;
+    cursor: pointer; letter-spacing: .04em;
+  }
+  .lang-btn.on { background: #33333B; color: #FBFAF7; border-color: #33333B; }
+  .brand { font-family: var(--font-serif); font-size: 15px; letter-spacing: .14em; color: #9A968C; text-align: center; margin-bottom: 6px; }
+  .title { font-family: var(--font-serif); font-size: 26px; font-weight: 700; text-align: center; line-height: 1.4; }
+  .sub { text-align: center; font-size: 13px; color: #8B887F; margin-top: 8px; line-height: 1.6; }
+
+  .ring-wrap { display: flex; justify-content: center; margin: 30px 0 20px; }
+  .ring {
+    width: 190px; height: 190px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    animation: breathe 5s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) { .ring { animation: none; } }
+  @keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.035)} }
+  .ring .score { font-size: 44px; font-weight: 600; line-height: 1; }
+  .ring .grade { font-family: var(--font-serif); font-size: 15px; margin-top: 6px; color: #55524A; }
+
+  .btn {
+    display: block; width: 100%; border: none; cursor: pointer;
+    padding: 16px; border-radius: 16px; font-size: 16px; font-weight: 500;
+    font-family: inherit; transition: transform .12s ease;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn:focus-visible { outline: 3px solid #9BB8D3; outline-offset: 2px; }
+  .btn-primary { background: #33333B; color: #FBFAF7; margin-top: 10px; }
+  .btn-ghost { background: transparent; color: #8B887F; font-size: 14px; margin-top: 8px; }
+
+  .quiz-cat { display: inline-block; font-size: 12px; letter-spacing: .12em; padding: 5px 12px; border-radius: 999px; margin-bottom: 16px; color: #55524A; }
+  .quiz-q { font-family: var(--font-serif); font-size: 22px; font-weight: 700; line-height: 1.55; min-height: 104px; }
+  .opt {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    background: #fff; border: 1px solid #E9E6DE; border-radius: 14px;
+    padding: 15px 18px; font-size: 15px; font-family: inherit; color: #33333B;
+    margin-top: 10px; transition: border-color .12s, transform .12s;
+  }
+  .opt:active { transform: scale(.985); border-color: #C9C4B6; }
+  .opt:focus-visible { outline: 3px solid #9BB8D3; outline-offset: 2px; }
+
+  .dots { display: flex; gap: 6px; justify-content: center; margin: 10px 0 30px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #E4E0D5; }
+  .dot.on { background: #33333B; }
+
+  .card { background: #fff; border: 1px solid #EDEAE2; border-radius: 20px; padding: 22px; margin-top: 16px; }
+  .bar-row { margin-top: 14px; }
+  .bar-row:first-child { margin-top: 0; }
+  .bar-label { display: flex; justify-content: space-between; font-size: 13px; color: #6E6B62; margin-bottom: 6px; }
+  .bar { height: 8px; border-radius: 999px; background: #F0EDE5; overflow: hidden; }
+  .bar > div { height: 100%; border-radius: 999px; transition: width .6s ease; }
+
+  .advice { font-family: var(--font-serif); font-size: 16px; line-height: 1.75; text-align: center; padding: 4px 6px; }
+  .note { font-size: 11.5px; color: #A5A199; text-align: center; margin-top: 22px; line-height: 1.6; }
+  .note + .note { margin-top: 10px; }
+
+  .tabbar { display: flex; gap: 8px; margin-bottom: 24px; }
+  .tab { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid #E9E6DE; background: #fff; font-size: 14px; font-family: inherit; cursor: pointer; color: #8B887F; }
+  .tab.on { background: #33333B; color: #FBFAF7; border-color: #33333B; }
+  .empty { text-align: center; color: #A5A199; font-size: 14px; padding: 40px 0; line-height: 1.7; }
+  .rec-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 4px; border-bottom: 1px solid #F1EEE6; font-size: 13.5px; gap: 8px; }
+  .rec-row:last-child { border-bottom: none; }
+  .rec-grade { font-family: var(--font-serif); font-size: 12px; padding: 4px 10px; border-radius: 999px; color: #55524A; white-space: nowrap; }
+  .legend { display:flex; gap:14px; justify-content:center; font-size:12px; color:#8B887F; margin-top:10px; }
+  .legend span::before { content:''; display:inline-block; width:10px; height:3px; border-radius:2px; margin-right:5px; vertical-align:middle; }
+  .lg-total::before{background:#33333B} .lg-mind::before{background:#A9A3C9} .lg-body::before{background:#7FAE96}
+  svg text { font-family: var(--font-body); }
+  .hidden { display: none; }
+  .backup-row { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-mini {
+    flex: 1; padding: 12px; border-radius: 12px; cursor: pointer;
+    background: #fff; border: 1px solid #E9E6DE; color: #55524A;
+    font-size: 14px; font-family: inherit; transition: transform .12s;
+  }
+  .btn-mini:active { transform: scale(.98); }
+  .btn-mini:focus-visible { outline: 3px solid #9BB8D3; outline-offset: 2px; }
+  .feedback { text-align: right; margin-top: 26px; }
+  .feedback a { font-size: 11.5px; color: #B5B1A8; text-decoration: none; }
+  .feedback a:active { color: #8B887F; }
+  .site-footer {
+    text-align: center; margin-top: 44px; padding-top: 18px;
+    border-top: 1px solid #F1EEE6;
+    font-size: 11.5px; color: #B5B1A8; line-height: 1.8;
+  }
+  .site-footer a { color: #A5A199; text-decoration: none; }
+  .site-footer a:active { color: #8B887F; }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <div class="lang-row" id="lang-row"></div>
+
+  <!-- 홈 -->
+  <section id="view-home">
+    <div class="brand" data-t="brand"></div>
+    <div class="title" data-t="homeTitle"></div>
+    <div class="sub" data-t="homeSub"></div>
+    <div class="ring-wrap"><div class="ring" id="home-ring"></div></div>
+    <button class="btn btn-primary" id="btn-start" onclick="startQuiz()"></button>
+    <button class="btn btn-ghost" onclick="show('trend')" data-t="toTrend"></button>
+    <div class="note" data-t="disclaimer"></div>
+    <div class="note" data-t="privacyNote"></div>
+    <div class="feedback"><a id="feedback-link" href="#"></a></div>
+  </section>
+
+  <!-- 퀴즈 -->
+  <section id="view-quiz" class="hidden">
+    <div class="dots" id="quiz-dots"></div>
+    <span class="quiz-cat" id="quiz-cat"></span>
+    <div class="quiz-q" id="quiz-q"></div>
+    <div id="quiz-opts" style="margin-top:18px"></div>
+    <button class="btn btn-ghost" onclick="show('home')" data-t="quitQuiz"></button>
+  </section>
+
+  <!-- 결과 -->
+  <section id="view-result" class="hidden">
+    <div class="brand" data-t="resultBrand"></div>
+    <div class="ring-wrap"><div class="ring" id="result-ring"></div></div>
+    <div class="card"><div class="advice" id="result-advice"></div></div>
+    <div class="card">
+      <div class="bar-row">
+        <div class="bar-label"><span data-t="mindLabel"></span><span id="mind-num"></span></div>
+        <div class="bar"><div id="mind-bar" style="background:#A9A3C9;width:0%"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label"><span data-t="bodyLabel"></span><span id="body-num"></span></div>
+        <div class="bar"><div id="body-bar" style="background:#7FAE96;width:0%"></div></div>
+      </div>
+    </div>
+    <div class="note" data-t="proNote"></div>
+    <button class="btn btn-primary" onclick="show('trend')" data-t="seeTrend"></button>
+    <button class="btn btn-ghost" onclick="show('home')" data-t="toHome"></button>
+  </section>
+
+  <!-- 추이 -->
+  <section id="view-trend" class="hidden">
+    <div class="tabbar">
+      <button class="tab" onclick="show('home')" data-t="tabToday"></button>
+      <button class="tab on" data-t="tabTrend"></button>
+    </div>
+    <div class="title" style="font-size:22px;text-align:left" data-t="trendTitle"></div>
+    <div class="sub" style="text-align:left;margin-top:4px" data-t="trendSub"></div>
+    <div id="trend-body"></div>
+    <button class="btn btn-primary" onclick="startQuiz()" data-t="newCheck"></button>
+    <div class="backup-row">
+      <button class="btn-mini" onclick="exportRecords()" data-t="exportJson"></button>
+      <button class="btn-mini" onclick="document.getElementById('import-file').click()" data-t="importJson"></button>
+      <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="importRecords(event)">
+    </div>
+    <div class="backup-row">
+      <button class="btn-mini" onclick="exportCSV()" data-t="exportCsv"></button>
+    </div>
+    <div class="note" data-t="backupNote"></div>
+    <div class="note" data-t="privacyNote"></div>
+    <button class="btn btn-ghost" onclick="show('home')" data-t="toHome"></button>
+  </section>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   설정 — 배포하는 분이 자유롭게 바꿔주세요
+   FEEDBACK_EMAIL: 사용 소감·의견을 받을 이메일 주소.
+   빈 문자열("")로 두면 의견 보내기 링크가 숨겨집니다.
+═══════════════════════════════════════════════════════ */
+const CONFIG = {
+  FEEDBACK_EMAIL: "contact.groovibe@gmail.com",
+  /* BRAND_URL: groovibe 홈페이지 주소 또는 "mailto:이메일"을 넣으면
+     푸터의 groovibe가 링크가 됩니다. 빈 문자열("")이면 일반 글자로 표시. */
+  BRAND_URL: "",
+};
+
+/* ── 다국어 텍스트 ────────────────────────────────── */
+const LANGS = [
+  { code: "ko", flag: "🇰🇷", short: "KOR" },
+  { code: "en", flag: "🇺🇸", short: "ENG" },
+  { code: "ja", flag: "🇯🇵", short: "JPN" },
+];
+
+const T = {
+  ko: {
+    brand: "오늘의 리듬", resultBrand: "오늘의 결과",
+    homeTitle: "몸과 마음,<br>오늘은 어떤가요?",
+    homeSub: "10개의 질문으로 오늘의 컨디션을 확인하고<br>활동 · 휴식 · 수면 중 알맞은 길을 찾아드려요.",
+    emptyRing: "아직 기록이 없어요.<br>첫 체크를 시작해보세요.",
+    startFirst: "오늘의 체크 시작하기", startAgain: "한 번 더 체크하기",
+    toTrend: "지난 기록과 추이 보기 →", quitQuiz: "그만두기",
+    disclaimer: "이 체크는 자가 관찰용이며 의학적 진단이 아니에요.<br>지속적인 어려움이나 심한 증상이 있다면<br>전문가나 의료기관의 도움을 우선해 주세요.",
+    privacyNote: "응답과 기록은 운영자 서버로 전송되지 않고<br>현재 기기의 브라우저에만 저장됩니다.<br>브라우저 데이터 삭제나 시크릿 모드에서는 기록이 사라질 수 있어요.",
+    proNote: "컨디션이 계속 좋지 않거나 증상이 심하다면,<br>전문가나 의료기관의 도움을 먼저 받아 주세요.",
+    today: "오늘", mindLabel: "정신 컨디션", bodyLabel: "몸 컨디션",
+    seeTrend: "추이 그래프 보기", toHome: "처음으로",
+    tabToday: "오늘", tabTrend: "추이",
+    trendTitle: "컨디션 추이", trendSub: "최근 14회 기록을 시간순으로 보여드려요.",
+    emptyTrend: "아직 저장된 기록이 없어요.<br>오늘의 체크부터 시작해보세요.",
+    newCheck: "새로 체크하기",
+    exportJson: "백업 파일 내보내기", importJson: "백업 가져오기", exportCsv: "엑셀용(CSV)으로 내보내기",
+    backupNote: "백업 파일(.json): 앱에 다시 불러오기 위한 보관용이에요<br>엑셀용(.csv): 엑셀·구글 시트에서 표로 열어볼 수 있어요",
+    legendTotal: "종합", legendMind: "정신", legendBody: "몸",
+    ptSuffix: "점",
+    csvHeader: "날짜,시간,종합점수,정신,몸,컨디션",
+    alertNoRecords: "아직 내보낼 기록이 없어요.",
+    alertImportInvalid: "가져올 수 있는 기록이 없어요. '백업 파일 내보내기'로 만든 파일인지 확인해 주세요.",
+    alertImportFail: "파일을 읽지 못했어요. '백업 파일 내보내기'로 만든 파일인지 확인해 주세요.",
+    alertImportOk: (a, u) => "가져오기 완료! 새 기록 " + a + "건, 갱신 " + u + "건이 합쳐졌어요.",
+    feedback: "사용 소감 · 의견 보내기 ✉", mailSubject: "[오늘의 리듬] 사용 소감·의견",
+    fileRecords: "오늘의리듬-기록-",
+    footer1: "일상의 회복을 돕는 작은 도구 · groovibe",
+    footer2: "© 2026 groovibe",
+    scale: ["매우 그렇다","그렇다","보통이다","아니다","전혀 아니다"],
+    catMind: "정신", catBody: "몸",
+    questions: [
+      "지금 기분이 좋고 마음이 안정적인가요?",
+      "오늘 무언가를 할 의욕이 있나요?",
+      "마음이 초조하거나 불안한가요?",
+      "집중이 잘 되는 편인가요?",
+      "스트레스가 크게 느껴지나요?",
+      "어젯밤 잠을 잘 주무셨나요?",
+      "두통이나 몸의 통증이 있나요?",
+      "감기 기운이나 몸살 기운이 있나요?",
+      "몸이 가볍고 활력이 느껴지나요?",
+      "눈이나 몸에 피로감이 쌓여 있나요?",
+    ],
+    grades: [
+      { grade: "아주 좋음", label: "활동하기 좋은 날", advice: "수영이든 운동이든 마음껏 즐기세요 — 단, 컨디션 좋은 날일수록 무리는 금물이에요." },
+      { grade: "좋음", label: "가벼운 활동 권장", advice: "걷기나 가벼운 스트레칭 정도가 오늘의 몸에 딱 맞아요." },
+      { grade: "보통", label: "휴식이 필요한 날", advice: "오늘은 몸과 마음을 쉬게 해주세요. 따뜻한 차 한 잔이 좋겠어요." },
+      { grade: "좋지 않음", label: "수면이 우선인 날", advice: "오늘은 이른 잠자리를 가장 먼저 고려해 보세요. 모든 건 내일의 나에게 맡겨도 괜찮아요." },
+    ],
+  },
+  en: {
+    brand: "Today's Rhythm", resultBrand: "Today's Result",
+    homeTitle: "Body and mind —<br>how are you today?",
+    homeSub: "Answer 10 questions to check today's condition<br>and find your way: activity, rest, or sleep.",
+    emptyRing: "No records yet.<br>Start your first check.",
+    startFirst: "Start today's check", startAgain: "Check again",
+    toTrend: "See past records & trends →", quitQuiz: "Quit",
+    disclaimer: "This is a self-observation tool, not a medical diagnosis.<br>If difficulties persist or symptoms are severe,<br>please seek help from a professional or medical provider first.",
+    privacyNote: "Your answers and records are never sent to any server —<br>they are stored only in this device's browser.<br>They may be lost if you clear browser data or use private mode.",
+    proNote: "If your condition stays low or symptoms feel severe,<br>please reach out to a professional or medical provider first.",
+    today: "Today", mindLabel: "Mind", bodyLabel: "Body",
+    seeTrend: "View trend graph", toHome: "Back to start",
+    tabToday: "Today", tabTrend: "Trends",
+    trendTitle: "Condition Trends", trendSub: "Your last 14 checks, in time order.",
+    emptyTrend: "No saved records yet.<br>Start with today's check.",
+    newCheck: "New check",
+    exportJson: "Export backup file", importJson: "Import backup", exportCsv: "Export as CSV (Excel)",
+    backupNote: "Backup (.json): for restoring your records into this app<br>CSV (.csv): opens as a table in Excel or Google Sheets",
+    legendTotal: "Total", legendMind: "Mind", legendBody: "Body",
+    ptSuffix: " pts",
+    csvHeader: "Date,Time,Total,Mind,Body,Condition",
+    alertNoRecords: "No records to export yet.",
+    alertImportInvalid: "No importable records found. Please check it's a file made with 'Export backup file'.",
+    alertImportFail: "Couldn't read the file. Please check it's a file made with 'Export backup file'.",
+    alertImportOk: (a, u) => "Import complete! " + a + " new and " + u + " updated records were merged.",
+    feedback: "Send feedback ✉", mailSubject: "[Today's Rhythm] Feedback",
+    fileRecords: "todays-rhythm-records-",
+    footer1: "Made with care by groovibe",
+    footer2: "© 2026 groovibe",
+    scale: ["Strongly agree","Agree","Neutral","Disagree","Strongly disagree"],
+    catMind: "Mind", catBody: "Body",
+    questions: [
+      "Do you feel good and emotionally settled right now?",
+      "Do you feel motivated to do something today?",
+      "Are you feeling restless or anxious?",
+      "Are you able to focus well?",
+      "Are you feeling a lot of stress?",
+      "Did you sleep well last night?",
+      "Do you have a headache or body aches?",
+      "Do you feel like you're coming down with something?",
+      "Does your body feel light and energetic?",
+      "Do your eyes or body feel fatigued?",
+    ],
+    grades: [
+      { grade: "Very good", label: "A great day to be active", advice: "Swim, work out, enjoy it fully — just remember, good days are when we tend to overdo it." },
+      { grade: "Good", label: "Light activity recommended", advice: "A walk or gentle stretching is just right for your body today." },
+      { grade: "Fair", label: "A day for rest", advice: "Let your body and mind rest today. A warm cup of tea would be lovely." },
+      { grade: "Not good", label: "Sleep comes first today", advice: "Consider an early bedtime first today. It's okay to leave the rest to tomorrow's you." },
+    ],
+  },
+  ja: {
+    brand: "今日のリズム", resultBrand: "今日の結果",
+    homeTitle: "体と心、<br>今日はどうですか？",
+    homeSub: "10個の質問で今日のコンディションを確認し、<br>活動・休息・睡眠から合う道を見つけましょう。",
+    emptyRing: "まだ記録がありません。<br>最初のチェックを始めましょう。",
+    startFirst: "今日のチェックを始める", startAgain: "もう一度チェックする",
+    toTrend: "過去の記録と推移を見る →", quitQuiz: "やめる",
+    disclaimer: "このチェックはセルフ観察用で、医学的診断ではありません。<br>つらさが続く場合や症状が強い場合は、<br>専門家や医療機関のサポートを優先してください。",
+    privacyNote: "回答と記録は運営者のサーバーに送信されず、<br>この端末のブラウザ内にのみ保存されます。<br>ブラウザデータの削除やシークレットモードでは記録が消えることがあります。",
+    proNote: "コンディションが優れない状態が続く場合や症状が強い場合は、<br>専門家や医療機関のサポートを先に受けてください。",
+    today: "今日", mindLabel: "心のコンディション", bodyLabel: "体のコンディション",
+    seeTrend: "推移グラフを見る", toHome: "最初へ",
+    tabToday: "今日", tabTrend: "推移",
+    trendTitle: "コンディション推移", trendSub: "直近14回の記録を時間順に表示します。",
+    emptyTrend: "まだ保存された記録がありません。<br>今日のチェックから始めましょう。",
+    newCheck: "新しくチェックする",
+    exportJson: "バックアップを書き出す", importJson: "バックアップを取り込む", exportCsv: "Excel用(CSV)で書き出す",
+    backupNote: "バックアップ(.json)：アプリに再読み込みするための保管用です<br>Excel用(.csv)：ExcelやGoogleスプレッドシートで表として開けます",
+    legendTotal: "総合", legendMind: "心", legendBody: "体",
+    ptSuffix: "点",
+    csvHeader: "日付,時刻,総合,心,体,コンディション",
+    alertNoRecords: "まだ書き出せる記録がありません。",
+    alertImportInvalid: "取り込める記録が見つかりません。「バックアップを書き出す」で作ったファイルかご確認ください。",
+    alertImportFail: "ファイルを読み込めませんでした。「バックアップを書き出す」で作ったファイルかご確認ください。",
+    alertImportOk: (a, u) => "取り込み完了！新規 " + a + " 件、更新 " + u + " 件を統合しました。",
+    feedback: "感想・ご意見を送る ✉", mailSubject: "[今日のリズム] 感想・ご意見",
+    fileRecords: "todays-rhythm-records-",
+    footer1: "日々の回復を支える小さなツール · groovibe",
+    footer2: "© 2026 groovibe",
+    scale: ["とてもそう思う","そう思う","ふつう","そう思わない","まったくそう思わない"],
+    catMind: "心", catBody: "体",
+    questions: [
+      "今、気分が良く心が安定していますか？",
+      "今日、何かをする意欲がありますか？",
+      "気持ちが焦ったり不安だったりしますか？",
+      "集中しやすい状態ですか？",
+      "ストレスを強く感じますか？",
+      "昨夜はよく眠れましたか？",
+      "頭痛や体の痛みがありますか？",
+      "風邪気味やだるさがありますか？",
+      "体が軽く、活力を感じますか？",
+      "目や体に疲れがたまっていますか？",
+    ],
+    grades: [
+      { grade: "とても良い", label: "活動に良い日", advice: "水泳でも運動でも思いきり楽しんでください — ただし、調子が良い日ほど無理は禁物です。" },
+      { grade: "良い", label: "軽い活動がおすすめ", advice: "散歩や軽いストレッチが今日の体にぴったりです。" },
+      { grade: "ふつう", label: "休息が必要な日", advice: "今日は心と体を休ませてあげましょう。温かいお茶が良さそうです。" },
+      { grade: "良くない", label: "睡眠を優先する日", advice: "今日はまず早めの就寝を考えてみてください。あとは明日の自分に任せて大丈夫です。" },
+    ],
+  },
+};
+
+/* ── 공통 데이터 ─────────────────────────────────── */
+const Q_META = [
+  { cat: "mind", polarity: 1 }, { cat: "mind", polarity: 1 }, { cat: "mind", polarity: -1 },
+  { cat: "mind", polarity: 1 }, { cat: "mind", polarity: -1 },
+  { cat: "body", polarity: 1 }, { cat: "body", polarity: -1 }, { cat: "body", polarity: -1 },
+  { cat: "body", polarity: 1 }, { cat: "body", polarity: -1 },
+];
+const GRADE_META = [
+  { min: 80, color: "#7FAE96", soft: "#E3F0E9" },
+  { min: 60, color: "#9BB8D3", soft: "#E7EFF6" },
+  { min: 40, color: "#E0B48A", soft: "#F7EDE1" },
+  { min: 0,  color: "#A9A3C9", soft: "#EDEBF5" },
+];
+const KEY = "condition-records";
+const LANG_KEY = "condition-lang";
+
+/* ── 언어 결정: URL ?lang= → 저장값 → 기기 언어 → en ── */
+function detectLang() {
+  try {
+    const p = new URLSearchParams(location.search).get("lang");
+    if (p && T[p]) return p;
+  } catch(e) {}
+  try {
+    const s = localStorage.getItem(LANG_KEY);
+    if (s && T[s]) return s;
+  } catch(e) {}
+  const nav = (navigator.language || "").toLowerCase();
+  if (nav.startsWith("ko")) return "ko";
+  if (nav.startsWith("ja")) return "ja";
+  return "en";
+}
+let lang = detectLang();
+
+const t = () => T[lang];
+const gradeIdx = s => GRADE_META.findIndex(g => s >= g.min);
+const gradeOf = s => {
+  const i = gradeIdx(s);
+  return Object.assign({}, GRADE_META[i], t().grades[i]);
+};
+const pad2 = n => String(n).padStart(2, "0");
+const nowTs = () => {
+  const d = new Date();
+  return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate()) +
+    "T" + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+};
+const todayKey = () => nowTs().slice(0, 10);
+const tsDate = ts => ts.slice(0, 10);
+const tsTime = ts => ts.slice(11, 16);
+
+/* ── 기록 로드 (+구버전 마이그레이션: date만 있던 기록에 ts 부여) ── */
+let records = [];
+try {
+  records = JSON.parse(localStorage.getItem(KEY) || "[]");
+  if (!Array.isArray(records)) records = [];
+} catch(e) { records = []; }
+records = records.map(r => {
+  if (!r.ts && r.date) r.ts = r.date + "T00:00";
+  return r;
+}).filter(r => r && r.ts).sort((a, b) => a.ts < b.ts ? -1 : 1);
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(records)); } catch(e) {} };
+
+let answers = [], step = 0;
+let currentView = "home";
+
+/* ── 언어 UI ─────────────────────────────────────── */
+function setLang(code) {
+  lang = code;
+  try { localStorage.setItem(LANG_KEY, code); } catch(e) {}
+  document.documentElement.lang = code;
+  applyTexts();
+  if (currentView === "home") renderHome();
+  if (currentView === "quiz") renderQuiz();
+  if (currentView === "trend") renderTrend();
+  if (currentView === "result") show("home");
+}
+
+function renderLangRow() {
+  document.getElementById("lang-row").innerHTML = LANGS.map(l =>
+    '<button class="lang-btn' + (l.code === lang ? ' on' : '') + '" onclick="setLang(\'' + l.code + '\')">' +
+    l.flag + ' ' + l.short + '</button>').join("");
+}
+
+function applyTexts() {
+  renderLangRow();
+  document.querySelectorAll("[data-t]").forEach(el => {
+    const v = t()[el.getAttribute("data-t")];
+    if (typeof v === "string") el.innerHTML = v;
+  });
+  const fb = document.getElementById("feedback-link");
+  if (CONFIG.FEEDBACK_EMAIL) {
+    fb.parentElement.style.display = "";
+    fb.textContent = t().feedback;
+    fb.href = "mailto:" + CONFIG.FEEDBACK_EMAIL + "?subject=" + encodeURIComponent(t().mailSubject);
+  } else {
+    fb.parentElement.style.display = "none";
+  }
+  document.title = t().brand;
+  const brand = CONFIG.BRAND_URL
+    ? '<a href="' + CONFIG.BRAND_URL + '" target="_blank" rel="noopener">groovibe</a>'
+    : 'groovibe';
+  document.getElementById("site-footer").innerHTML =
+    t().footer1.replace("groovibe", brand) + "<br>" +
+    t().footer2.replace("groovibe", brand);
+}
+
+/* ── 화면 전환 ───────────────────────────────────── */
+function show(name) {
+  currentView = name;
+  ["home","quiz","result","trend"].forEach(v =>
+    document.getElementById("view-" + v).classList.toggle("hidden", v !== name));
+  if (name === "home") renderHome();
+  if (name === "trend") renderTrend();
+  window.scrollTo(0, 0);
+}
+
+function renderHome() {
+  const ring = document.getElementById("home-ring");
+  const latest = records[records.length - 1];
+  if (latest) {
+    const g = gradeOf(latest.score);
+    const when = tsDate(latest.ts) === todayKey()
+      ? t().today + " " + tsTime(latest.ts)
+      : latest.ts.slice(5, 10) + " " + tsTime(latest.ts);
+    ring.style.background = g.soft;
+    ring.innerHTML = '<div class="score" style="color:' + g.color + '">' + latest.score + '</div>' +
+      '<div class="grade">' + when + ' · ' + g.grade + '</div>';
+  } else {
+    ring.style.background = "#F2F0E9";
+    ring.innerHTML = '<div class="grade" style="font-size:15px;padding:0 26px;text-align:center;line-height:1.6;color:#8B887F">' + t().emptyRing + '</div>';
+  }
+  const checkedToday = records.some(r => tsDate(r.ts) === todayKey());
+  document.getElementById("btn-start").textContent = checkedToday ? t().startAgain : t().startFirst;
+}
+
+/* ── 퀴즈 ────────────────────────────────────────── */
+function startQuiz() {
+  answers = []; step = 0;
+  show("quiz"); renderQuiz();
+}
+
+function renderQuiz() {
+  const meta = Q_META[step];
+  document.getElementById("quiz-dots").innerHTML =
+    Q_META.map((_, i) => '<span class="dot' + (i <= step ? ' on' : '') + '"></span>').join("");
+  const cat = document.getElementById("quiz-cat");
+  const catName = meta.cat === "mind" ? t().catMind : t().catBody;
+  cat.textContent = catName + " · " + (step + 1) + " / " + Q_META.length;
+  cat.style.background = meta.cat === "mind" ? "#EDEBF5" : "#E3F0E9";
+  document.getElementById("quiz-q").textContent = t().questions[step];
+  document.getElementById("quiz-opts").innerHTML =
+    t().scale.map((s, i) => '<button class="opt" onclick="answer(' + i + ')">' + s + '</button>').join("");
+}
+
+function answer(i) {
+  answers.push(i);
+  if (answers.length === Q_META.length) finish();
+  else { step++; renderQuiz(); }
+}
+
+function finish() {
+  let total = 0, mind = 0, body = 0;
+  answers.forEach((a, i) => {
+    const q = Q_META[i];
+    const pt = q.polarity === 1 ? 4 - a : a;
+    total += pt;
+    if (q.cat === "mind") mind += pt; else body += pt;
+  });
+  const rec = {
+    ts: nowTs(),
+    score: Math.round(total / 40 * 100),
+    mind: Math.round(mind / 20 * 100),
+    body: Math.round(body / 20 * 100),
+  };
+  records = records.filter(r => r.ts !== rec.ts).concat(rec)
+    .sort((a, b) => a.ts < b.ts ? -1 : 1);
+  save();
+  const g = gradeOf(rec.score);
+  const ring = document.getElementById("result-ring");
+  ring.style.background = g.soft;
+  ring.innerHTML = '<div class="score" style="color:' + g.color + '">' + rec.score + '</div>' +
+    '<div class="grade">' + g.grade + ' · ' + g.label + '</div>';
+  document.getElementById("result-advice").textContent = "“" + g.advice + "”";
+  document.getElementById("mind-num").textContent = rec.mind;
+  document.getElementById("body-num").textContent = rec.body;
+  show("result");
+  setTimeout(() => {
+    document.getElementById("mind-bar").style.width = rec.mind + "%";
+    document.getElementById("body-bar").style.width = rec.body + "%";
+  }, 60);
+}
+
+/* ── 추이 ────────────────────────────────────────── */
+function renderTrend() {
+  const box = document.getElementById("trend-body");
+  if (!records.length) {
+    box.innerHTML = '<div class="empty">' + t().emptyTrend + '</div>';
+    return;
+  }
+  const data = records.slice(-14);
+  const W = 340, H = 200, padL = 30, padR = 12, padT = 14, padB = 26;
+  const x = i => data.length === 1 ? W / 2 : padL + (W - padL - padR) * i / (data.length - 1);
+  const y = v => padT + (H - padT - padB) * (1 - v / 100);
+  const line = (key, color, width) =>
+    '<polyline fill="none" stroke="' + color + '" stroke-width="' + width + '" stroke-linecap="round" stroke-linejoin="round" points="' +
+    data.map((r, i) => x(i) + ',' + y(r[key])).join(' ') + '"/>';
+  const dots = data.map((r, i) =>
+    '<circle cx="' + x(i) + '" cy="' + y(r.score) + '" r="3.5" fill="#33333B"/>').join("");
+
+  /* x축 라벨: 날짜가 바뀌면 MM-DD, 같은 날 안에서는 HH:MM. 겹침 방지를 위해 간격 조절 */
+  const labelStep = Math.max(1, Math.ceil(data.length / 6));
+  const labels = data.map((r, i) => {
+    if (i % labelStep !== 0 && i !== data.length - 1) return "";
+    const isNewDay = i === 0 || tsDate(data[i-1].ts) !== tsDate(r.ts);
+    const text = isNewDay ? r.ts.slice(5, 10) : tsTime(r.ts);
+    return '<text x="' + x(i) + '" y="' + (H - 8) + '" font-size="9.5" fill="#A5A199" text-anchor="middle">' + text + '</text>';
+  }).join("");
+  const yTicks = [0, 40, 80, 100].map(v =>
+    '<text x="' + (padL - 8) + '" y="' + (y(v) + 3) + '" font-size="10" fill="#A5A199" text-anchor="end">' + v + '</text>' +
+    '<line x1="' + padL + '" y1="' + y(v) + '" x2="' + (W - padR) + '" y2="' + y(v) + '" stroke="' + (v === 80 ? '#7FAE96' : v === 40 ? '#E0B48A' : '#F0EDE5') + '" stroke-width="1" ' + (v === 80 || v === 40 ? 'stroke-dasharray="4 4" opacity="0.5"' : '') + '/>').join("");
+
+  const rows = data.slice().reverse().map(r => {
+    const g = gradeOf(r.score);
+    return '<div class="rec-row"><span style="color:#6E6B62">' + tsDate(r.ts) + ' ' + tsTime(r.ts) + '</span>' +
+      '<span style="font-weight:600">' + r.score + t().ptSuffix + '</span>' +
+      '<span class="rec-grade" style="background:' + g.soft + '">' + g.grade + ' · ' + g.label + '</span></div>';
+  }).join("");
+
+  box.innerHTML =
+    '<div class="card" style="padding:16px 10px 10px">' +
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%">' +
+        yTicks + line("mind", "#A9A3C9", 1.4) + line("body", "#7FAE96", 1.4) +
+        line("score", "#33333B", 2.2) + dots + labels +
+      '</svg>' +
+      '<div class="legend"><span class="lg-total">' + t().legendTotal + '</span><span class="lg-mind">' + t().legendMind + '</span><span class="lg-body">' + t().legendBody + '</span></div>' +
+    '</div>' +
+    '<div class="card" style="padding:8px 18px">' + rows + '</div>';
+}
+
+/* ── 백업 ────────────────────────────────────────── */
+function downloadBlob(blob, filename) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+function exportRecords() {
+  if (!records.length) { alert(t().alertNoRecords); return; }
+  const payload = { app: "Today's Rhythm", version: 2, exported: new Date().toISOString(), records: records };
+  downloadBlob(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }),
+    t().fileRecords + todayKey() + ".json");
+}
+
+function exportCSV() {
+  if (!records.length) { alert(t().alertNoRecords); return; }
+  const header = t().csvHeader + "\n";
+  const rows = records.map(r => {
+    const g = gradeOf(r.score);
+    return tsDate(r.ts) + "," + tsTime(r.ts) + "," + r.score + "," + r.mind + "," + r.body + "," + g.grade + " · " + g.label;
+  }).join("\n");
+  downloadBlob(new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8" }),
+    t().fileRecords + todayKey() + ".csv");
+}
+
+function importRecords(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      const incoming = Array.isArray(data) ? data : data.records;
+      if (!Array.isArray(incoming)) throw new Error("format");
+      const valid = incoming.map(r => {
+        if (r && !r.ts && typeof r.date === "string") r = Object.assign({}, r, { ts: r.date + "T00:00" });
+        return r;
+      }).filter(r =>
+        r && typeof r.ts === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(r.ts) &&
+        typeof r.score === "number" && typeof r.mind === "number" && typeof r.body === "number"
+      );
+      if (!valid.length) { alert(t().alertImportInvalid); return; }
+      const map = {};
+      records.forEach(r => { map[r.ts] = r; });
+      let added = 0, updated = 0;
+      valid.forEach(r => {
+        const ts = r.ts.slice(0, 16);
+        if (map[ts]) updated++; else added++;
+        map[ts] = { ts: ts, score: Math.round(r.score), mind: Math.round(r.mind), body: Math.round(r.body) };
+      });
+      records = Object.values(map).sort((a, b) => a.ts < b.ts ? -1 : 1);
+      save();
+      renderTrend();
+      alert(t().alertImportOk(added, updated));
+    } catch (e) {
+      alert(t().alertImportFail);
+    } finally {
+      ev.target.value = "";
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ── 시작 ────────────────────────────────────────── */
+document.documentElement.lang = lang;
+applyTexts();
+renderHome();
+</script>
+</body>
+</html>
