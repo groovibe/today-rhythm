@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "android/**"
+      - "ci/source-lite.b64.part*"
       - "ANDROID_SOURCE_BUNDLE.md"
       - ".github/workflows/android-debug.yml"
   workflow_dispatch:
@@ -20,23 +21,73 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Reconstruct verified Stage 2.3 source bundle
+        env:
+          SOURCE_SHA256: "85b640a4fcd0ec511a4a1c975173e3ebbbe2d5376b31d4111f86f540788e8c1a"
+        run: |
+          cat ci/source-lite.b64.part00 \
+              ci/source-lite.b64.part01 \
+              ci/source-lite.b64.part02 \
+              ci/source-lite.b64.part03 \
+            | base64 --decode > /tmp/today-rhythm-source-lite.zip
+          echo "${SOURCE_SHA256}  /tmp/today-rhythm-source-lite.zip" | sha256sum -c -
+          rm -rf /tmp/today-rhythm-source
+          mkdir -p /tmp/today-rhythm-source
+          unzip -q /tmp/today-rhythm-source-lite.zip -d /tmp/today-rhythm-source
+          rm -rf "$GITHUB_WORKSPACE/android/TodayRhythmAndroid"
+          mkdir -p "$GITHUB_WORKSPACE/android"
+          cp -a /tmp/today-rhythm-source/android/TodayRhythmAndroid \
+                "$GITHUB_WORKSPACE/android/TodayRhythmAndroid"
+          test -f "$GITHUB_WORKSPACE/android/TodayRhythmAndroid/settings.gradle.kts"
+          test -f "$GITHUB_WORKSPACE/android/TodayRhythmAndroid/app/src/main/assets/index-android.html"
+          test -f "$GITHUB_WORKSPACE/android/TodayRhythmAndroid/gradle/wrapper/gradle-wrapper.jar"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Download verified Stage 2.3 source bundle
-        env:
-          SOURCE_FILE_ID: "196QeTYDYxk6FskZHrcHoS-UBgFs6mC_u"
-          SOURCE_SHA256: "bdb97532b359d4df948e623d134e74a9dfbb1c770d59fea25dda061a13e72b6c"
+      - name: Prepare offline web fonts from official sources
+        working-directory: android/TodayRhythmAndroid
         run: |
-          python -m pip install --disable-pip-version-check gdown
-          gdown "https://drive.google.com/uc?id=${SOURCE_FILE_ID}" -O /tmp/today-rhythm-source.zip
-          echo "${SOURCE_SHA256}  /tmp/today-rhythm-source.zip" | sha256sum -c -
-          unzip -o /tmp/today-rhythm-source.zip -d "$GITHUB_WORKSPACE"
-          test -f "$GITHUB_WORKSPACE/android/TodayRhythmAndroid/settings.gradle.kts"
-          test -f "$GITHUB_WORKSPACE/android/TodayRhythmAndroid/app/src/main/assets/index-android.html"
-          test -f "$GITHUB_WORKSPACE/android/TodayRhythmAndroid/gradle/wrapper/gradle-wrapper.jar"
+          python -m pip install --disable-pip-version-check "fonttools[woff]" brotli
+          mkdir -p /tmp/today-rhythm-fonts app/src/main/assets/fonts
+
+          curl --fail --location --retry 3 \
+            https://raw.githubusercontent.com/google/fonts/main/ofl/gowunbatang/GowunBatang-Regular.ttf \
+            -o /tmp/today-rhythm-fonts/GowunBatang-Regular.ttf
+          curl --fail --location --retry 3 \
+            https://raw.githubusercontent.com/google/fonts/main/ofl/gowunbatang/GowunBatang-Bold.ttf \
+            -o /tmp/today-rhythm-fonts/GowunBatang-Bold.ttf
+
+          for weight in Regular Medium SemiBold; do
+            curl --fail --location --retry 3 \
+              "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsanskr/IBMPlexSansKR-${weight}.ttf" \
+              -o "/tmp/today-rhythm-fonts/IBMPlexSansKR-${weight}.ttf"
+            curl --fail --location --retry 3 \
+              "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsansjp/IBMPlexSansJP-${weight}.ttf" \
+              -o "/tmp/today-rhythm-fonts/IBMPlexSansJP-${weight}.ttf"
+          done
+
+          for font in \
+            GowunBatang-Regular \
+            GowunBatang-Bold \
+            IBMPlexSansKR-Regular \
+            IBMPlexSansKR-Medium \
+            IBMPlexSansKR-SemiBold \
+            IBMPlexSansJP-Regular \
+            IBMPlexSansJP-Medium \
+            IBMPlexSansJP-SemiBold; do
+            pyftsubset "/tmp/today-rhythm-fonts/${font}.ttf" \
+              --text-file=app/src/main/assets/index-android.html \
+              --flavor=woff2 \
+              --layout-features='*' \
+              --name-IDs='*' \
+              --name-legacy \
+              --name-languages='*' \
+              --output-file="app/src/main/assets/fonts/${font}.woff2"
+            test -s "app/src/main/assets/fonts/${font}.woff2"
+          done
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -48,7 +99,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install Android SDK Platform 36
-        run: sdkmanager "platforms;android-36"
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@v4
