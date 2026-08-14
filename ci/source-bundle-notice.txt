@@ -1,1 +1,0 @@
-Temporary CI source bundle is stored in the repository as a binary Git blob and extracted by GitHub Actions. Font binaries are generated/downloaded separately during CI. This bridge keeps mobile APK testing available while the full source tree is migrated.
