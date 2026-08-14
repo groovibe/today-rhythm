@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - "android/**"
-      - "ci/source-lite.b64.part*"
+      - "ci/source-text-v5/**"
       - "ANDROID_SOURCE_BUNDLE.md"
       - ".github/workflows/android-debug.yml"
   workflow_dispatch:
@@ -23,24 +23,28 @@ jobs:
 
       - name: Reconstruct verified Stage 2.3 source bundle
         env:
-          SOURCE_SHA256: "85b640a4fcd0ec511a4a1c975173e3ebbbe2d5376b31d4111f86f540788e8c1a"
+          SOURCE_SHA256: "ec07add294a1dacfbe7ab96778e726edcf82a108b21bd69e42d4d5efe0563316"
         run: |
-          cat ci/source-lite.b64.part00 \
-              ci/source-lite.b64.part01 \
-              ci/source-lite.b64.part02 \
-              ci/source-lite.b64.part03 \
-            | base64 --decode > /tmp/today-rhythm-source-lite.zip
-          echo "${SOURCE_SHA256}  /tmp/today-rhythm-source-lite.zip" | sha256sum -c -
+          cat ci/source-text-v5/part00 \
+              ci/source-text-v5/part01 \
+              ci/source-text-v5/part02 \
+              ci/source-text-v5/part03a \
+              ci/source-text-v5/part03b \
+              ci/source-text-v5/part04 \
+              ci/source-text-v5/part05 \
+              ci/source-text-v5/part06 \
+              ci/source-text-v5/part07 \
+            | base64 --decode > /tmp/today-rhythm-source-text.zip
+          echo "${SOURCE_SHA256}  /tmp/today-rhythm-source-text.zip" | sha256sum -c -
           rm -rf /tmp/today-rhythm-source
           mkdir -p /tmp/today-rhythm-source
-          unzip -q /tmp/today-rhythm-source-lite.zip -d /tmp/today-rhythm-source
+          unzip -q /tmp/today-rhythm-source-text.zip -d /tmp/today-rhythm-source
           rm -rf "$GITHUB_WORKSPACE/android/TodayRhythmAndroid"
           mkdir -p "$GITHUB_WORKSPACE/android"
           cp -a /tmp/today-rhythm-source/android/TodayRhythmAndroid \
                 "$GITHUB_WORKSPACE/android/TodayRhythmAndroid"
           test -f "$GITHUB_WORKSPACE/android/TodayRhythmAndroid/settings.gradle.kts"
           test -f "$GITHUB_WORKSPACE/android/TodayRhythmAndroid/app/src/main/assets/index-android.html"
-          test -f "$GITHUB_WORKSPACE/android/TodayRhythmAndroid/gradle/wrapper/gradle-wrapper.jar"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -101,8 +105,10 @@ jobs:
       - name: Install Android SDK Platform 36
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Set up Gradle cache
+      - name: Set up Gradle 8.13
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
 
       - name: Restore stable test signing key
         uses: actions/cache@v4
@@ -110,13 +116,9 @@ jobs:
           path: ~/.android/debug.keystore
           key: today-rhythm-debug-signing-key-v1
 
-      - name: Grant execute permission for Gradle wrapper
-        working-directory: android/TodayRhythmAndroid
-        run: chmod +x gradlew
-
       - name: Build debug APK
         working-directory: android/TodayRhythmAndroid
-        run: ./gradlew assembleDebug --no-daemon
+        run: gradle assembleDebug --no-daemon
 
       - name: Rename APK
         run: |
