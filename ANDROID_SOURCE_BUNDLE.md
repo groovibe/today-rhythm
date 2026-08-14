@@ -1,12 +1,25 @@
-# Android source bundle for CI
+# Android CI source bundle
 
-The GitHub Actions debug build downloads the complete Stage 2.3 Android source bundle from the Groovibe Google Drive folder, verifies its SHA-256 checksum, extracts it into the runner workspace, and builds the APK.
+GitHub Actions reconstructs the Today Rhythm Android Stage 2.3 source from verified Base64 text chunks stored under:
 
-- Google Drive file ID: `196QeTYDYxk6FskZHrcHoS-UBgFs6mC_u`
-- File name: `today-rhythm-github-upload.zip`
-- SHA-256: `bdb97532b359d4df948e623d134e74a9dfbb1c770d59fea25dda061a13e72b6c`
-- Android project path after extraction: `android/TodayRhythmAndroid`
+`ci/source-text-v5/`
 
-The root `index.html` remains the GitHub Pages web app and is not replaced by this bundle.
+Concatenation order:
 
-When the Android source changes, upload the new ZIP to Drive and update both the file ID and SHA-256 in `.github/workflows/android-debug.yml` and this document.
+1. `part00`
+2. `part01`
+3. `part02`
+4. `part03a`
+5. `part03b`
+6. `part04`
+7. `part05`
+8. `part06`
+9. `part07`
+
+Decoded ZIP SHA-256:
+
+`ec07add294a1dacfbe7ab96778e726edcf82a108b21bd69e42d4d5efe0563316`
+
+The workflow verifies this checksum before extraction. Web fonts are downloaded from the official Google Fonts repository during CI, subset to the characters used by `index-android.html`, and packaged as local WOFF2 assets. The installed Android app remains fully offline and does not receive the INTERNET permission.
+
+The root `index.html` remains the GitHub Pages web app and is not replaced by the Android build process.
